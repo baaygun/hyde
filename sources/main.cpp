@@ -329,6 +329,12 @@ std::vector<std::string> integrate_hyde_config(int argc, const char** argv) {
         const std::string& tested_by = config["hyde-tested-by"];
         hyde_flags.emplace_back("-hyde-tested-by=" + tested_by);
     }
+    
+    if (config.count("hyde-flags")) {
+        for (const auto& hyde_flag : config["hyde_flags"]) {
+            hyde_flags.push_back(hyde_flag);
+        }
+    }
 
     hyde_flags.insert(hyde_flags.end(), cli_hyde_flags.begin(), cli_hyde_flags.end());
     clang_flags.insert(clang_flags.end(), cli_clang_flags.begin(), cli_clang_flags.end());
@@ -352,7 +358,7 @@ std::vector<std::string> integrate_hyde_config(int argc, const char** argv) {
 /**************************************************************************************************/
 
 std::vector<std::string> source_paths(int argc, const char** argv) {
-    return CommonOptionsParser(argc, argv, MyToolCategory).getSourcePathList();
+    return CommonOptionsParser::create(argc, argv, MyToolCategory)->getSourcePathList();
 }
 
 /**************************************************************************************************/
@@ -372,7 +378,7 @@ int main(int argc, const char** argv) try {
     std::transform(args.begin(), args.end(), new_argv.begin(),
                    [](const auto& arg) { return arg.c_str(); });
 
-    CommonOptionsParser OptionsParser(new_argc, &new_argv[0], MyToolCategory);
+    auto OptionsParser = CommonOptionsParser::create(new_argc, &new_argv[0], MyToolCategory);
 
     if (UseSystemClang) {
         AutoResourceDirectory = true;
@@ -392,14 +398,14 @@ int main(int argc, const char** argv) try {
                   << '\n';
     }
 
-    auto sourcePaths = make_absolute(OptionsParser.getSourcePathList());
+    auto sourcePaths = make_absolute(OptionsParser->getSourcePathList());
     // Remove duplicates (CommonOptionsParser is duplicating every single entry)
     std::unordered_set<std::string> s;
     for (std::string i : sourcePaths) {
         s.insert(i);
     }
     sourcePaths.assign(s.begin(), s.end());
-    ClangTool Tool(OptionsParser.getCompilations(), sourcePaths);
+    ClangTool Tool(OptionsParser->getCompilations(), sourcePaths);
     MatchFinder Finder;
     hyde::processing_options options{sourcePaths, ToolAccessFilter, NamespaceBlacklist, ProcessClassMethods};
 
