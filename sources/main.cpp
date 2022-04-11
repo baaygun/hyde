@@ -128,6 +128,12 @@ static cl::opt<bool> EmitJson(
     cl::cat(MyToolCategory),
     cl::ValueDisallowed);
 
+static cl::opt<bool> ParseHeaders(
+    "parse-headers",
+    cl::desc("Recurse into header files, all in the app folder"),
+    cl::cat(MyToolCategory),
+    cl::ValueDisallowed);
+    
 static cl::opt<hyde::attribute_category> TestedBy(
     "hyde-tested-by",
     cl::values(
@@ -407,7 +413,7 @@ int main(int argc, const char** argv) try {
     sourcePaths.assign(s.begin(), s.end());
     ClangTool Tool(OptionsParser->getCompilations(), sourcePaths);
     MatchFinder Finder;
-    hyde::processing_options options{sourcePaths, ToolAccessFilter, NamespaceBlacklist, ProcessClassMethods};
+    hyde::processing_options options{sourcePaths, ToolAccessFilter, NamespaceBlacklist, ProcessClassMethods, ParseHeaders};
 
     hyde::FunctionInfo function_matcher(options);
     Finder.addMatcher(hyde::FunctionInfo::GetMatcher(), &function_matcher);

@@ -114,6 +114,11 @@ void ClassInfo::run(const MatchFinder::MatchResult& Result) {
 
     info["kind"] = clas->getKindName();
     info["methods"] = json::object();
+    info["bases"] = json::array();
+    
+    for (const auto& base : clas->bases()) {
+        info["bases"].push_back(hyde::to_string(clas, base.getType()));
+    }
 
     FindConstructor ctor_finder;
     ctor_finder.TraverseDecl(const_cast<Decl*>(static_cast<const Decl*>(clas)));
@@ -130,30 +135,31 @@ void ClassInfo::run(const MatchFinder::MatchResult& Result) {
         info["template_parameters"] = GetTemplateParameters(Result.Context, template_decl);
     }
 
-    for (const auto& method : clas->methods()) {
-        auto methodInfo_opt = DetailFunctionDecl(_options, method);
-        if (!methodInfo_opt) continue;
-        auto methodInfo = std::move(*methodInfo_opt);
-        info["methods"][static_cast<const std::string&>(methodInfo["short_name"])].push_back(
-            std::move(methodInfo));
-    }
+   for (const auto& method : clas->methods()) {
+       auto methodInfo_opt = DetailFunctionDecl(_options, method);
+       if (!methodInfo_opt) continue;
+       auto methodInfo = std::move(*methodInfo_opt);
+       info["methods"][static_cast<const std::string&>(methodInfo["short_name"])].push_back(
+           std::move(methodInfo));
+   }
 
-    for (const auto& decl : clas->decls()) {
-        auto* function_template_decl = dyn_cast<FunctionTemplateDecl>(decl);
-        if (!function_template_decl) continue;
-        auto methodInfo_opt =
-            DetailFunctionDecl(_options, function_template_decl->getTemplatedDecl());
-        if (!methodInfo_opt) continue;
-        auto methodInfo = std::move(*methodInfo_opt);
-        info["methods"][static_cast<const std::string&>(methodInfo["short_name"])].push_back(
-            std::move(methodInfo));
-    }
+   for (const auto& decl : clas->decls()) {
+       auto* function_template_decl = dyn_cast<FunctionTemplateDecl>(decl);
+       if (!function_template_decl) continue;
+       auto methodInfo_opt =
+           DetailFunctionDecl(_options, function_template_decl->getTemplatedDecl());
+       if (!methodInfo_opt) continue;
+       auto methodInfo = std::move(*methodInfo_opt);
+       info["methods"][static_cast<const std::string&>(methodInfo["short_name"])].push_back(
+           std::move(methodInfo));
+   }
 
     for (const auto& field : clas->fields()) {
         auto fieldInfo_opt = StandardDeclInfo(_options, field);
         if (!fieldInfo_opt) continue;
         auto fieldInfo = std::move(*fieldInfo_opt);
         fieldInfo["type"] = hyde::to_string(field, field->getType());
+        fieldInfo["mutable"] = field->isMutable();
         info["fields"][static_cast<const std::string&>(fieldInfo["qualified_name"])] =
             fieldInfo; // can't move this into place for some reason.
     }

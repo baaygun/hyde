@@ -222,9 +222,9 @@ std::string GetSignature(const ASTContext* n,
     if (isTrailing) {
         if (canHaveCV) {
             // bit of repetition but hey not much.
-            if (functionT->isConst()) signature << " const";
-            if (functionT->isVolatile()) signature << " volatile";
-            if (functionT->isRestrict()) signature << " restrict";
+            if (functionT != nullptr && functionT->isConst()) signature << " const";
+            if (functionT != nullptr && functionT->isVolatile()) signature << " volatile";
+            if (functionT != nullptr && functionT->isRestrict()) signature << " restrict";
         }
 
         signature << " -> " << hyde::to_string(function, function->getReturnType());
@@ -235,9 +235,9 @@ std::string GetSignature(const ASTContext* n,
     }
 
     if (!isTrailing) {
-        if (functionT->isConst()) signature << " const";
-        if (functionT->isVolatile()) signature << " volatile";
-        if (functionT->isRestrict()) signature << " restrict";
+        if (functionT != nullptr && functionT->isConst()) signature << " const";
+        if (functionT != nullptr && functionT->isVolatile()) signature << " volatile";
+        if (functionT != nullptr && functionT->isRestrict()) signature << " restrict";
     }
 
     if (const auto* functionPT =
@@ -290,9 +290,9 @@ hyde::json GetParents(const ASTContext* n, const Decl* d) {
 
     while (true) {
         if (parent.size() == 0) break;
-        if (parent.size() != 1) {
-            assert(false && "What exactly is going on here?");
-        }
+//        if (parent.size() != 1) {
+////            assert(false && "What exactly is going on here?");
+//        }
 
         auto node = parent.begin()->get<NodeType>();
         if (node) {
@@ -506,11 +506,12 @@ std::string GetArgumentList(const llvm::ArrayRef<clang::NamedDecl*> args) {
 
 /**************************************************************************************************/
 
-bool PathCheck(const std::vector<std::string>& paths, const Decl* d, ASTContext* n) {
+bool PathCheck(const std::vector<std::string>& paths, const Decl* d, ASTContext* n, bool parse_headers) {
     auto beginLoc = d->getBeginLoc();
     auto location = beginLoc.printToString(n->getSourceManager());
     std::string path = location.substr(0, location.find(':'));
-    return std::find(paths.begin(), paths.end(), path) != paths.end();
+    return std::find(paths.begin(), paths.end(), path) != paths.end()
+        || (parse_headers && path.substr(0, 2).compare("..") == 0);
 }
 
 /**************************************************************************************************/

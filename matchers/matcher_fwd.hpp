@@ -34,6 +34,7 @@ struct processing_options {
     ToolAccessFilter _access_filter;
     std::vector<std::string> _namespace_blacklist;
     bool _process_class_methods;
+    bool _parse_headers;
 };
 
 /**************************************************************************************************/

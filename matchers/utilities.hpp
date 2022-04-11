@@ -44,7 +44,7 @@ boost::optional<json> DetailFunctionDecl(const hyde::processing_options& options
 boost::optional<json> DetailCXXRecordDecl(const hyde::processing_options& options,
                                           const clang::CXXRecordDecl* cxx);
 
-bool PathCheck(const std::vector<std::string>& paths, const clang::Decl* d, clang::ASTContext* n);
+bool PathCheck(const std::vector<std::string>& paths, const clang::Decl* d, clang::ASTContext* n, bool parse_headers);
 
 bool AccessCheck(ToolAccessFilter hyde_filter, clang::AccessSpecifier clang_access);
 
@@ -88,7 +88,7 @@ boost::optional<json> StandardDeclInfo(const hyde::processing_options& options,
                                        const DeclarationType* d) {
     clang::ASTContext* n = &d->getASTContext();
 
-    if (!PathCheck(options._paths, d, n)) return boost::optional<json>();
+    if (!PathCheck(options._paths, d, n, options._parse_headers)) return boost::optional<json>();
 
     json info = json::object();
 
